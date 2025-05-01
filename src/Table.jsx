@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import styled from "styled-components";
-import { Pagination } from "antd";
+import { Pagination, Select, DatePicker, Input } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { arr } from "./constant";
 
@@ -57,21 +57,40 @@ const Status = styled.span`
     status === "BLOCKED"
       ? "#e53e3e"
       : status === "INVITED"
-        ? "#d69e2e"
-        : "#38a169"};
+      ? "#d69e2e"
+      : "#38a169"};
+`;
+
+const StatusDropdown = styled(Select)`
+  width: 100%;
 `;
 
 export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [data, setData] = useState(arr); // Store the imported array in local state
+  const [dateRange, setDateRange] = useState([null, null]); // State for date range
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [statusFilter, setStatusFilter] = useState(null); // State for status filter
   const pageSize = 10;
+
+  const totalUsers = data.length;
+  const activeUsers = data.filter(
+    (item) => item.about.status === "ACTIVE"
+  ).length;
+  const invitedUsers = data.filter(
+    (item) => item.about.status === "INVITED"
+  ).length;
+  const blockedUsers = data.filter(
+    (item) => item.about.status === "BLOCKED"
+  ).length;
 
   const formatDate = (dateStr) => {
     const [day, month, year] = dateStr.split(".");
     const date = new Date(
       parseInt(year, 10),
       parseInt(month, 10) - 1,
-      parseInt(day, 10),
+      parseInt(day, 10)
     );
     return date.toLocaleDateString("en-US", {
       day: "2-digit",
@@ -80,9 +99,45 @@ export default function RenderList() {
     });
   };
 
+  const handleDateRangeChange = (dates) => {
+    setDateRange(dates);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const filteredData = useMemo(() => {
+    let result = data;
+    if (dateRange?.[0] && dateRange?.[1]) {
+      const [start, end] = dateRange;
+      result = result.filter((item) => {
+        const [day, month, year] = item.details.date.split(".");
+        const itemDate = new Date(year, month - 1, day);
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+    if (searchQuery) {
+      result = result.filter((item) =>
+        item.about.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (statusFilter) {
+      result = result.filter((item) => item.about.status === statusFilter);
+    }
+    return result;
+  }, [data, dateRange, searchQuery, statusFilter]);
+
   const sortedArr = useMemo(() => {
-    if (!sortConfig.key || !sortConfig.direction) return arr;
-    const sorted = [...arr].sort((a, b) => {
+    if (!sortConfig.key || !sortConfig.direction) return filteredData;
+    const sorted = [...filteredData].sort((a, b) => {
       let aValue, bValue;
       switch (sortConfig.key) {
         case "name":
@@ -115,7 +170,7 @@ export default function RenderList() {
       return 0;
     });
     return sorted;
-  }, [sortConfig]);
+  }, [sortConfig, filteredData]);
 
   const changeSort = (key) => {
     setSortConfig((prev) => {
@@ -135,12 +190,104 @@ export default function RenderList() {
     return <FaSort style={{ marginLeft: 4 }} />;
   };
 
+  const handleStatusChange = (id, newStatus) => {
+    setData((prevData) =>
+      prevData.map((item) =>
+        item.id === id
+          ? { ...item, about: { ...item.about, status: newStatus } }
+          : item
+      )
+    );
+  };
+
   const startIndex = (currentPage - 1) * pageSize;
   const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
 
   return (
     <Container>
       <Title>User Invitations</Title>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <div
+          style={{
+            flex: 1,
+            padding: "1rem",
+            background: "#f7fafc",
+            textAlign: "center",
+            border: "1px solid #e2e8f0",
+            borderRadius: "4px",
+            color: "black",
+          }}
+        >
+          <strong>Total Users</strong>
+          <div>{totalUsers}</div>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            padding: "1rem",
+            background: "#f7fafc",
+            textAlign: "center",
+            border: "1px solid #e2e8f0",
+            borderRadius: "4px",
+            color: "black",
+          }}
+        >
+          <strong>Active</strong>
+          <div>{activeUsers}</div>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            padding: "1rem",
+            background: "#f7fafc",
+            textAlign: "center",
+            border: "1px solid #e2e8f0",
+            borderRadius: "4px",
+            color: "black",
+          }}
+        >
+          <strong>Invited</strong>
+          <div>{invitedUsers}</div>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            padding: "1rem",
+            background: "#f7fafc",
+            textAlign: "center",
+            border: "1px solid #e2e8f0",
+            borderRadius: "4px",
+            color: "black",
+          }}
+        >
+          <strong>Blocked</strong>
+          <div>{blockedUsers}</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <Input
+          placeholder="Search by name"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          style={{ flex: 1 }}
+        />
+        <DatePicker.RangePicker
+          onChange={handleDateRangeChange}
+          style={{ flex: 1 }}
+        />
+        <Select
+          placeholder="Filter by status"
+          value={statusFilter}
+          onChange={handleStatusFilterChange}
+          style={{ flex: 1 }}
+          allowClear
+          options={[
+            { value: "ACTIVE", label: "Active" },
+            { value: "INVITED", label: "Invited" },
+            { value: "BLOCKED", label: "Blocked" },
+          ]}
+        />
+      </div>
       <Table>
         <Thead>
           <Tr>
@@ -159,6 +306,7 @@ export default function RenderList() {
             <Th onClick={() => changeSort("status")}>
               Status{renderSortIcon("status")}
             </Th>
+            <Th>Update Status</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -170,6 +318,17 @@ export default function RenderList() {
               <Td>{item.details.invitedBy}</Td>
               <Td>
                 <Status status={item.about.status}>{item.about.status}</Status>
+              </Td>
+              <Td>
+                <StatusDropdown
+                  value={item.about.status}
+                  onChange={(value) => handleStatusChange(item.id, value)}
+                  options={[
+                    { value: "ACTIVE", label: "Active" },
+                    { value: "INVITED", label: "Invited" },
+                    { value: "BLOCKED", label: "Blocked" },
+                  ]}
+                />
               </Td>
             </Tr>
           ))}
