@@ -19,6 +19,15 @@ export const Container = styled.div`
       border-radius: 4px;
       color: black;
     }
+
+    .clear-btn {
+      padding: 0.25rem 1rem;
+      background: #e53e3e;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   }
 
   .pagination {

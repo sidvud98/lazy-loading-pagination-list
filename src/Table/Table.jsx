@@ -25,12 +25,15 @@ export default function RenderList() {
   const pageSize = 10;
 
   const totalUsers = data.length;
+
   const activeUsers = data.filter(
     (item) => item.about.status === "ACTIVE"
   ).length;
+
   const invitedUsers = data.filter(
     (item) => item.about.status === "INVITED"
   ).length;
+
   const blockedUsers = data.filter(
     (item) => item.about.status === "BLOCKED"
   ).length;
@@ -61,6 +64,13 @@ export default function RenderList() {
 
   const handleStatusFilterChange = (value) => {
     setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setDateRange([null, null]);
+    setSearchQuery("");
+    setStatusFilter(null);
     setCurrentPage(1);
   };
 
@@ -174,7 +184,7 @@ export default function RenderList() {
           <div>{blockedUsers}</div>
         </div>
       </div>
-      <div className="sub-container">
+      <div className="sub-container" style={{ display: "flex", gap: "1rem" }}>
         <Input
           placeholder="Search by name"
           value={searchQuery}
@@ -182,6 +192,7 @@ export default function RenderList() {
           style={{ flex: 1 }}
         />
         <DatePicker.RangePicker
+          value={dateRange}
           onChange={handleDateRangeChange}
           style={{ flex: 1 }}
         />
@@ -197,6 +208,9 @@ export default function RenderList() {
             { value: "BLOCKED", label: "Blocked" },
           ]}
         />
+        <button onClick={handleClearFilters} className="clear-btn ">
+          Clear
+        </button>
       </div>
       <Table>
         <Thead>
