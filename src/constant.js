@@ -1,4 +1,4 @@
-export const arr = [
+export const DATA_OBJECT = [
   {
     id: "999",
     about: {

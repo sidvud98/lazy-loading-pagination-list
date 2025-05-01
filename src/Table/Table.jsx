@@ -1,74 +1,24 @@
 import React, { useState, useMemo } from "react";
-import styled from "styled-components";
 import { Pagination, Select, DatePicker, Input } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
-import { arr } from "./constant";
-
-const Container = styled.div`
-  padding: 1rem;
-  overflow-x: auto;
-`;
-
-const Title = styled.h1`
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-collapse: collapse;
-`;
-
-const Thead = styled.thead`
-  background: #f7fafc;
-`;
-
-const Th = styled.th`
-  padding: 0.5rem 1rem;
-  text-align: left;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4a5568;
-  border-bottom: 1px solid #e2e8f0;
-  cursor: pointer;
-  /* display as default table-cell to maintain column layout */
-`;
-
-const Tbody = styled.tbody``;
-
-const Tr = styled.tr`
-  &:not(:first-child) {
-    border-top: 1px solid #e2e8f0;
-  }
-`;
-
-const Td = styled.td`
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  color: #2d3748;
-`;
-
-const Status = styled.span`
-  font-weight: 600;
-  color: ${({ status }) =>
-    status === "BLOCKED"
-      ? "#e53e3e"
-      : status === "INVITED"
-      ? "#d69e2e"
-      : "#38a169"};
-`;
-
-const StatusDropdown = styled(Select)`
-  width: 100%;
-`;
+import { DATA_OBJECT } from "../constant";
+import {
+  Container,
+  Title,
+  Table,
+  Thead,
+  Th,
+  Tbody,
+  Tr,
+  Td,
+  Status,
+  StatusDropdown,
+} from "./Table.style";
 
 export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-  const [data, setData] = useState(arr); // Store the imported array in local state
+  const [data, setData] = useState(DATA_OBJECT); // Store the imported array in local state
   const [dateRange, setDateRange] = useState([null, null]); // State for date range
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [statusFilter, setStatusFilter] = useState(null); // State for status filter
@@ -206,65 +156,25 @@ export default function RenderList() {
   return (
     <Container>
       <Title>User Invitations</Title>
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <div
-          style={{
-            flex: 1,
-            padding: "1rem",
-            background: "#f7fafc",
-            textAlign: "center",
-            border: "1px solid #e2e8f0",
-            borderRadius: "4px",
-            color: "black",
-          }}
-        >
+      <div className="sub-container">
+        <div className="box">
           <strong>Total Users</strong>
           <div>{totalUsers}</div>
         </div>
-        <div
-          style={{
-            flex: 1,
-            padding: "1rem",
-            background: "#f7fafc",
-            textAlign: "center",
-            border: "1px solid #e2e8f0",
-            borderRadius: "4px",
-            color: "black",
-          }}
-        >
+        <div className="box">
           <strong>Active</strong>
           <div>{activeUsers}</div>
         </div>
-        <div
-          style={{
-            flex: 1,
-            padding: "1rem",
-            background: "#f7fafc",
-            textAlign: "center",
-            border: "1px solid #e2e8f0",
-            borderRadius: "4px",
-            color: "black",
-          }}
-        >
+        <div className="box">
           <strong>Invited</strong>
           <div>{invitedUsers}</div>
         </div>
-        <div
-          style={{
-            flex: 1,
-            padding: "1rem",
-            background: "#f7fafc",
-            textAlign: "center",
-            border: "1px solid #e2e8f0",
-            borderRadius: "4px",
-            color: "black",
-          }}
-        >
+        <div className="box">
           <strong>Blocked</strong>
           <div>{blockedUsers}</div>
         </div>
       </div>
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+      <div className="sub-container">
         <Input
           placeholder="Search by name"
           value={searchQuery}
@@ -334,7 +244,7 @@ export default function RenderList() {
           ))}
         </Tbody>
       </Table>
-      <div style={{ marginTop: "1rem", textAlign: "center" }}>
+      <div className="pagination">
         <Pagination
           current={currentPage}
           total={sortedArr.length}
