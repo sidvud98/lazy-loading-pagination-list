@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import styled from "styled-components";
 import { Pagination, Select, DatePicker, Input } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
@@ -65,13 +65,25 @@ const StatusDropdown = styled(Select)`
   width: 100%;
 `;
 
+// Dummy service function to simulate data fetching
+const fetchData = (page, pageSize) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const startIndex = (page - 1) * pageSize;
+      const paginatedData = arr.slice(startIndex, startIndex + pageSize);
+      resolve(paginatedData);
+    }, 1000); // Simulate 1-second delay
+  });
+};
+
 export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-  const [data, setData] = useState(arr); // Store the imported array in local state
+  const [data, setData] = useState([]); // Store the fetched data
   const [dateRange, setDateRange] = useState([null, null]); // State for date range
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [statusFilter, setStatusFilter] = useState(null); // State for status filter
+  const [isLoading, setIsLoading] = useState(false); // State for loader
   const pageSize = 10;
 
   const totalUsers = data.length;
@@ -200,8 +212,19 @@ export default function RenderList() {
     );
   };
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
+  useEffect(() => {
+    const loadPageData = async () => {
+      setIsLoading(true);
+      const fetchedData = await fetchData(currentPage, pageSize);
+      setData(fetchedData);
+      setIsLoading(false);
+    };
+    loadPageData();
+  }, [currentPage]);
+
+  const currentItems = useMemo(() => {
+    return data; // Use fetched data directly
+  }, [data]);
 
   return (
     <Container>
@@ -310,34 +333,44 @@ export default function RenderList() {
           </Tr>
         </Thead>
         <Tbody>
-          {currentItems.map((item) => (
-            <Tr key={item.id}>
-              <Td>{item.about.name}</Td>
-              <Td>{item.about.email}</Td>
-              <Td>{formatDate(item.details.date)}</Td>
-              <Td>{item.details.invitedBy}</Td>
-              <Td>
-                <Status status={item.about.status}>{item.about.status}</Status>
-              </Td>
-              <Td>
-                <StatusDropdown
-                  value={item.about.status}
-                  onChange={(value) => handleStatusChange(item.id, value)}
-                  options={[
-                    { value: "ACTIVE", label: "Active" },
-                    { value: "INVITED", label: "Invited" },
-                    { value: "BLOCKED", label: "Blocked" },
-                  ]}
-                />
+          {isLoading ? (
+            <Tr>
+              <Td colSpan="6" style={{ textAlign: "center" }}>
+                Loading...
               </Td>
             </Tr>
-          ))}
+          ) : (
+            currentItems.map((item) => (
+              <Tr key={item.id}>
+                <Td>{item.about.name}</Td>
+                <Td>{item.about.email}</Td>
+                <Td>{formatDate(item.details.date)}</Td>
+                <Td>{item.details.invitedBy}</Td>
+                <Td>
+                  <Status status={item.about.status}>
+                    {item.about.status}
+                  </Status>
+                </Td>
+                <Td>
+                  <StatusDropdown
+                    value={item.about.status}
+                    onChange={(value) => handleStatusChange(item.id, value)}
+                    options={[
+                      { value: "ACTIVE", label: "Active" },
+                      { value: "INVITED", label: "Invited" },
+                      { value: "BLOCKED", label: "Blocked" },
+                    ]}
+                  />
+                </Td>
+              </Tr>
+            ))
+          )}
         </Tbody>
       </Table>
       <div style={{ marginTop: "1rem", textAlign: "center" }}>
         <Pagination
           current={currentPage}
-          total={sortedArr.length}
+          total={arr.length} // Use total length of the constant array
           pageSize={pageSize}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
