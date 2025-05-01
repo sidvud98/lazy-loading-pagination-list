@@ -24,6 +24,8 @@ export const Container = styled.div`
   .pagination {
     margin-top: 1rem;
     text-align: center;
+    display: flex;
+    justify-content: center;
   }
 `;
 
