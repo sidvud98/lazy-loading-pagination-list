@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Pagination, Select, DatePicker, Input } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
-import { DATA_OBJECT } from "../constant";
+import { DATA_OBJECT } from "../constants/constants";
 import {
   Container,
   Title,
@@ -14,6 +14,7 @@ import {
   Status,
   StatusDropdown,
 } from "./Table.style";
+import { formatDate } from "../utils/helpers";
 
 export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,20 +38,6 @@ export default function RenderList() {
   const blockedUsers = data.filter(
     (item) => item.about.status === "BLOCKED"
   ).length;
-
-  const formatDate = (dateStr) => {
-    const [day, month, year] = dateStr.split(".");
-    const date = new Date(
-      parseInt(year, 10),
-      parseInt(month, 10) - 1,
-      parseInt(day, 10)
-    );
-    return date.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   const handleDateRangeChange = (dates) => {
     setDateRange(dates);
