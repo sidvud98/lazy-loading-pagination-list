@@ -1,5 +1,29 @@
 export const arr = [
   {
+    id: "999",
+    about: {
+      name: "Aashiq",
+      status: "ACTIVE",
+      email: "Aashiq.d9@demo.com",
+    },
+    details: {
+      date: "08.05.1998",
+      invitedBy: "Zendaya",
+    },
+  },
+  {
+    id: "999",
+    about: {
+      name: "Zendaya",
+      status: "ACTIVE",
+      email: "Zendaya.d9@demo.com",
+    },
+    details: {
+      date: "12.10.2079",
+      invitedBy: "Aashiq",
+    },
+  },
+  {
     id: "9",
     about: {
       name: "Demo Demo 9",
