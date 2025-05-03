@@ -72,8 +72,15 @@ export default function RenderList() {
       });
     }
     if (searchQuery) {
-      result = result.filter((item) =>
-        item.about.name.toLowerCase().includes(searchQuery.toLowerCase())
+      result = result.filter(
+        (item) =>
+          item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.about.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.about.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.details.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.details.invitedBy
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
     }
     if (statusFilter) {
