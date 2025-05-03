@@ -162,20 +162,91 @@ export default function RenderList() {
     );
   };
 
+  // Reintroduce the loading state and async timer simulation
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true); // Show loader
       setData([]); // Wipe the visible list
-      const { data: pageData, totalLength } = await fetchPageData(
-        currentPage,
-        pageSize
-      );
-      setData(pageData); // Set the new data
-      setTotalPages(Math.ceil(totalLength / pageSize));
+
+      // Simulate a network delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Fetch all data instead of page-wise data
+      const { data: allData } = await fetchPageData(1, Number.MAX_SAFE_INTEGER);
+
+      // Apply filtering to the fetched data
+      let filteredData = allData;
+      if (dateRange?.[0] && dateRange?.[1]) {
+        const [start, end] = dateRange;
+        filteredData = filteredData.filter((item) => {
+          const [day, month, year] = item.details.date.split(".");
+          const itemDate = new Date(year, month - 1, day);
+          return itemDate >= start && itemDate <= end;
+        });
+      }
+      if (searchQuery) {
+        filteredData = filteredData.filter(
+          (item) =>
+            item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.about.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.about.status
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            item.details.date
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            item.details.invitedBy
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+        );
+      }
+      if (statusFilter) {
+        filteredData = filteredData.filter(
+          (item) => item.about.status === statusFilter
+        );
+      }
+
+      // Apply sorting to the filtered data
+      const sortedData = [...filteredData].sort((a, b) => {
+        if (!sortConfig.key || !sortConfig.direction) return 0;
+        let aValue, bValue;
+        switch (sortConfig.key) {
+          case "name":
+            aValue = a.about.name;
+            bValue = b.about.name;
+            break;
+          case "email":
+            aValue = a.about.email;
+            bValue = b.about.email;
+            break;
+          case "date":
+            const [ad, am, ay] = a.details.date.split(".");
+            const [bd, bm, by] = b.details.date.split(".");
+            aValue = new Date(ay, am - 1, ad);
+            bValue = new Date(by, bm - 1, bd);
+            break;
+          case "invitedBy":
+            aValue = a.details.invitedBy;
+            bValue = b.details.invitedBy;
+            break;
+          case "status":
+            aValue = a.about.status;
+            bValue = b.about.status;
+            break;
+          default:
+            return 0;
+        }
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+
+      setData(sortedData); // Set the filtered and sorted data
+      setTotalPages(Math.ceil(sortedData.length / pageSize));
       setLoading(false); // Hide loader
     };
     fetchData();
-  }, [currentPage]);
+  }, [currentPage, sortConfig, dateRange, searchQuery, statusFilter]); // Add `currentPage` dependency to show loader when changing pages
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
@@ -258,7 +329,7 @@ export default function RenderList() {
               </Td>
             </Tr>
           ) : (
-            data.map((item) => (
+            currentItems.map((item) => (
               <Tr key={item.id}>
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
