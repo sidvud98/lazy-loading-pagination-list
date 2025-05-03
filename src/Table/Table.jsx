@@ -29,17 +29,18 @@ export default function RenderList() {
   const [loading, setLoading] = useState(false); // Add a `loading` state to manage the loader visibility
   const pageSize = 10;
 
-  const totalUsers = data.length;
+  // Update the total counts dynamically based on `originalData`
+  const totalUsers = originalData.length;
 
-  const activeUsers = data.filter(
+  const activeUsers = originalData.filter(
     (item) => item.about.status === "ACTIVE"
   ).length;
 
-  const invitedUsers = data.filter(
+  const invitedUsers = originalData.filter(
     (item) => item.about.status === "INVITED"
   ).length;
 
-  const blockedUsers = data.filter(
+  const blockedUsers = originalData.filter(
     (item) => item.about.status === "BLOCKED"
   ).length;
 
