@@ -21,6 +21,7 @@ export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [data, setData] = useState(DATA_OBJECT); // Store the imported array in local state
+  const [originalData, setOriginalData] = useState(DATA_OBJECT); // State to hold the original data
   const [dateRange, setDateRange] = useState([null, null]); // State for date range
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [statusFilter, setStatusFilter] = useState(null); // State for status filter
@@ -153,7 +154,7 @@ export default function RenderList() {
   };
 
   const handleStatusChange = (id, newStatus) => {
-    setData((prevData) =>
+    setOriginalData((prevData) =>
       prevData.map((item) =>
         item.id === id
           ? { ...item, about: { ...item.about, status: newStatus } }
@@ -171,11 +172,8 @@ export default function RenderList() {
       // Simulate a network delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Fetch all data instead of page-wise data
-      const { data: allData } = await fetchPageData(1, Number.MAX_SAFE_INTEGER);
-
-      // Apply filtering to the fetched data
-      let filteredData = allData;
+      // Use `originalData` instead of fetching from the API
+      let filteredData = originalData;
       if (dateRange?.[0] && dateRange?.[1]) {
         const [start, end] = dateRange;
         filteredData = filteredData.filter((item) => {
@@ -246,7 +244,7 @@ export default function RenderList() {
       setLoading(false); // Hide loader
     };
     fetchData();
-  }, [currentPage, sortConfig, dateRange, searchQuery, statusFilter]); // Add `currentPage` dependency to show loader when changing pages
+  }, [originalData, currentPage, sortConfig, dateRange, searchQuery, statusFilter]); // Add `originalData` as a dependency
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
