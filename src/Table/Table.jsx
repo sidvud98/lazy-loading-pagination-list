@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Pagination, Select, DatePicker, Input } from "antd";
+import { Pagination, Select, DatePicker, Input, Spin } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { DATA_OBJECT } from "../constants/constants";
 import { fetchPageData } from "../services/api";
@@ -254,7 +254,7 @@ export default function RenderList() {
           {loading ? (
             <Tr>
               <Td colSpan="6" style={{ textAlign: "center" }}>
-                Loading...
+                <Spin size="medium" />
               </Td>
             </Tr>
           ) : (

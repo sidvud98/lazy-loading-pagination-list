@@ -65,12 +65,32 @@ export const Th = styled.th`
   cursor: pointer;
 `;
 
-export const Tbody = styled.tbody``;
+export const Tbody = styled.tbody`
+  display: block;
+  min-height: 216px;
+  max-height: 216px;
+  overflow-y: auto;
+  width: 100%;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #a1a1a1;
+  }
+`;
 
 export const Tr = styled.tr`
-  &:not(:first-child) {
-    border-top: 1px solid #e2e8f0;
-  }
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  text-align: left;
 `;
 
 export const Td = styled.td`
