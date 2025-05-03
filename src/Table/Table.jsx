@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Pagination, Select, DatePicker, Input } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { DATA_OBJECT } from "../constants/constants";
+import { fetchPageData } from "../services/api";
 import {
   Container,
   Title,
@@ -23,6 +24,7 @@ export default function RenderList() {
   const [dateRange, setDateRange] = useState([null, null]); // State for date range
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [statusFilter, setStatusFilter] = useState(null); // State for status filter
+  const [totalPages, setTotalPages] = useState(0); // State for total pages
   const pageSize = 10;
 
   const totalUsers = data.length;
@@ -94,28 +96,33 @@ export default function RenderList() {
     const sorted = [...filteredData].sort((a, b) => {
       let aValue, bValue;
       switch (sortConfig.key) {
-        case "name":
+        case "name": {
           aValue = a.about.name;
           bValue = b.about.name;
           break;
-        case "email":
+        }
+        case "email": {
           aValue = a.about.email;
           bValue = b.about.email;
           break;
-        case "date":
+        }
+        case "date": {
           const [ad, am, ay] = a.details.date.split(".");
           const [bd, bm, by] = b.details.date.split(".");
           aValue = new Date(ay, am - 1, ad);
           bValue = new Date(by, bm - 1, bd);
           break;
-        case "invitedBy":
+        }
+        case "invitedBy": {
           aValue = a.details.invitedBy;
           bValue = b.details.invitedBy;
           break;
-        case "status":
+        }
+        case "status": {
           aValue = a.about.status;
           bValue = b.about.status;
           break;
+        }
         default:
           return 0;
       }
@@ -153,6 +160,18 @@ export default function RenderList() {
       )
     );
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: pageData, totalLength } = await fetchPageData(
+        currentPage,
+        pageSize
+      );
+      setData(pageData); // Set only the current page's data
+      setTotalPages(Math.ceil(totalLength / pageSize));
+    };
+    fetchData();
+  }, [currentPage]);
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
@@ -228,7 +247,7 @@ export default function RenderList() {
           </Tr>
         </Thead>
         <Tbody>
-          {currentItems.map((item) => (
+          {data.map((item) => (
             <Tr key={item.id}>
               <Td>{item.about.name}</Td>
               <Td>{item.about.email}</Td>
@@ -255,7 +274,7 @@ export default function RenderList() {
       <div className="pagination">
         <Pagination
           current={currentPage}
-          total={sortedArr.length}
+          total={totalPages * pageSize} // Correctly calculate total items
           pageSize={pageSize}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
