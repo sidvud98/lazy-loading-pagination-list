@@ -252,7 +252,7 @@ export default function RenderList() {
         </Thead>
         <Tbody>
           {loading ? (
-            <Tr>
+            <Tr style={{ verticalAlign: "center", height: "216px" }}>
               <Td colSpan="6" style={{ textAlign: "center" }}>
                 <Spin size="medium" />
               </Td>
