@@ -25,6 +25,7 @@ export default function RenderList() {
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [statusFilter, setStatusFilter] = useState(null); // State for status filter
   const [totalPages, setTotalPages] = useState(0); // State for total pages
+  const [loading, setLoading] = useState(false); // Add a `loading` state to manage the loader visibility
   const pageSize = 10;
 
   const totalUsers = data.length;
@@ -163,12 +164,15 @@ export default function RenderList() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Show loader
+      setData([]); // Wipe the visible list
       const { data: pageData, totalLength } = await fetchPageData(
         currentPage,
         pageSize
       );
-      setData(pageData); // Set only the current page's data
+      setData(pageData); // Set the new data
       setTotalPages(Math.ceil(totalLength / pageSize));
+      setLoading(false); // Hide loader
     };
     fetchData();
   }, [currentPage]);
@@ -247,28 +251,38 @@ export default function RenderList() {
           </Tr>
         </Thead>
         <Tbody>
-          {data.map((item) => (
-            <Tr key={item.id}>
-              <Td>{item.about.name}</Td>
-              <Td>{item.about.email}</Td>
-              <Td>{formatDate(item.details.date)}</Td>
-              <Td>{item.details.invitedBy}</Td>
-              <Td>
-                <Status status={item.about.status}>{item.about.status}</Status>
-              </Td>
-              <Td>
-                <StatusDropdown
-                  value={item.about.status}
-                  onChange={(value) => handleStatusChange(item.id, value)}
-                  options={[
-                    { value: "ACTIVE", label: "Active" },
-                    { value: "INVITED", label: "Invited" },
-                    { value: "BLOCKED", label: "Blocked" },
-                  ]}
-                />
+          {loading ? (
+            <Tr>
+              <Td colSpan="6" style={{ textAlign: "center" }}>
+                Loading...
               </Td>
             </Tr>
-          ))}
+          ) : (
+            data.map((item) => (
+              <Tr key={item.id}>
+                <Td>{item.about.name}</Td>
+                <Td>{item.about.email}</Td>
+                <Td>{formatDate(item.details.date)}</Td>
+                <Td>{item.details.invitedBy}</Td>
+                <Td>
+                  <Status status={item.about.status}>
+                    {item.about.status}
+                  </Status>
+                </Td>
+                <Td>
+                  <StatusDropdown
+                    value={item.about.status}
+                    onChange={(value) => handleStatusChange(item.id, value)}
+                    options={[
+                      { value: "ACTIVE", label: "Active" },
+                      { value: "INVITED", label: "Invited" },
+                      { value: "BLOCKED", label: "Blocked" },
+                    ]}
+                  />
+                </Td>
+              </Tr>
+            ))
+          )}
         </Tbody>
       </Table>
       <div className="pagination">
