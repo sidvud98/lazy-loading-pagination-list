@@ -59,15 +59,18 @@ export default function RenderList() {
     setCurrentPage(1);
   };
 
+  // Update the `handleClearFilters` function to ensure status updates persist
   const handleClearFilters = () => {
     setDateRange([null, null]);
     setSearchQuery("");
     setStatusFilter(null);
+    setData(originalData); // Reset the data to the originalData state to persist status updates
     setCurrentPage(1);
   };
 
+  // Update the `filteredData` logic to use `originalData` as the base for filtering
   const filteredData = useMemo(() => {
-    let result = data;
+    let result = originalData; // Use `originalData` to ensure updated statuses persist
     if (dateRange?.[0] && dateRange?.[1]) {
       const [start, end] = dateRange;
       result = result.filter((item) => {
@@ -92,7 +95,7 @@ export default function RenderList() {
       result = result.filter((item) => item.about.status === statusFilter);
     }
     return result;
-  }, [data, dateRange, searchQuery, statusFilter]);
+  }, [originalData, dateRange, searchQuery, statusFilter]);
 
   const sortedArr = useMemo(() => {
     if (!sortConfig.key || !sortConfig.direction) return filteredData;
@@ -154,7 +157,15 @@ export default function RenderList() {
     return <FaSort style={{ marginLeft: 4 }} />;
   };
 
+  // Fix the `handleStatusChange` function to ensure it updates the `data` state correctly
   const handleStatusChange = (id, newStatus) => {
+    setData((prevData) =>
+      prevData.map((item) =>
+        item.id === id
+          ? { ...item, about: { ...item.about, status: newStatus } }
+          : item
+      )
+    );
     setOriginalData((prevData) =>
       prevData.map((item) =>
         item.id === id
@@ -164,88 +175,35 @@ export default function RenderList() {
     );
   };
 
-  // Reintroduce the loading state and async timer simulation
+  // Update the `useEffect` to pass filters and sorting to `fetchPageData`
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true); // Show loader
       setData([]); // Wipe the visible list
 
-      // Simulate a network delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Simulate a network delay and fetch data with filters and sorting
+      const { data: initialRows, totalLength } = await fetchPageData(
+        currentPage,
+        5,
+        false,
+        { dateRange, searchQuery, statusFilter },
+        sortConfig,
+        originalData // Pass the state to the service function
+      );
 
-      // Use `originalData` instead of fetching from the API
-      let filteredData = originalData;
-      if (dateRange?.[0] && dateRange?.[1]) {
-        const [start, end] = dateRange;
-        filteredData = filteredData.filter((item) => {
-          const [day, month, year] = item.details.date.split(".");
-          const itemDate = new Date(year, month - 1, day);
-          return itemDate >= start && itemDate <= end;
-        });
-      }
-      if (searchQuery) {
-        filteredData = filteredData.filter(
-          (item) =>
-            item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.about.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.about.status
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            item.details.date
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            item.details.invitedBy
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        );
-      }
-      if (statusFilter) {
-        filteredData = filteredData.filter(
-          (item) => item.about.status === statusFilter
-        );
-      }
-
-      // Apply sorting to the filtered data
-      const sortedData = [...filteredData].sort((a, b) => {
-        if (!sortConfig.key || !sortConfig.direction) return 0;
-        let aValue, bValue;
-        switch (sortConfig.key) {
-          case "name":
-            aValue = a.about.name;
-            bValue = b.about.name;
-            break;
-          case "email":
-            aValue = a.about.email;
-            bValue = b.about.email;
-            break;
-          case "date":
-            const [ad, am, ay] = a.details.date.split(".");
-            const [bd, bm, by] = b.details.date.split(".");
-            aValue = new Date(ay, am - 1, ad);
-            bValue = new Date(by, bm - 1, bd);
-            break;
-          case "invitedBy":
-            aValue = a.details.invitedBy;
-            bValue = b.details.invitedBy;
-            break;
-          case "status":
-            aValue = a.about.status;
-            bValue = b.about.status;
-            break;
-          default:
-            return 0;
-        }
-        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-
-      setData(sortedData); // Set the filtered and sorted data
-      setTotalPages(Math.ceil(sortedData.length / pageSize));
+      setData(initialRows); // Set the initial 5 rows for the current page
+      setTotalPages(Math.ceil(totalLength / 10)); // Calculate total pages assuming 10 rows per page
       setLoading(false); // Hide loader
     };
     fetchData();
-  }, [originalData, currentPage, sortConfig, dateRange, searchQuery, statusFilter]); // Add `originalData` as a dependency
+  }, [
+    currentPage,
+    dateRange,
+    searchQuery,
+    statusFilter,
+    sortConfig,
+    originalData,
+  ]); // Ensure data is fetched with updated filters and sorting
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
@@ -328,7 +286,7 @@ export default function RenderList() {
               </Td>
             </Tr>
           ) : (
-            currentItems.map((item) => (
+            data.map((item) => (
               <Tr key={item.id}>
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
