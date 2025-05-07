@@ -20,8 +20,8 @@ import { formatDate } from "../utils/helpers";
 export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-  const [data, setData] = useState(DATA_OBJECT); // Store the imported array in local state
   const [originalData, setOriginalData] = useState(DATA_OBJECT); // State to hold the original data
+  const [data, setData] = useState(originalData.slice(0, 5)); // Store the imported array in local state
   const [dateRange, setDateRange] = useState([null, null]); // State for date range
   const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [statusFilter, setStatusFilter] = useState(null); // State for status filter
