@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Pagination, Select, DatePicker, Input, Spin } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { DATA_OBJECT } from "../constants/constants";
@@ -65,80 +65,9 @@ export default function RenderList() {
     setDateRange([null, null]);
     setSearchQuery("");
     setStatusFilter(null);
-    setData(originalData); // Reset the data to the originalData state to persist status updates
+    setData(originalData.slice(0, 5)); // Reset the data to the originalData state to persist status updates
     setCurrentPage(1);
   };
-
-  // Update the `filteredData` logic to use `originalData` as the base for filtering
-  const filteredData = useMemo(() => {
-    let result = originalData; // Use `originalData` to ensure updated statuses persist
-    if (dateRange?.[0] && dateRange?.[1]) {
-      const [start, end] = dateRange;
-      result = result.filter((item) => {
-        const [day, month, year] = item.details.date.split(".");
-        const itemDate = new Date(year, month - 1, day);
-        return itemDate >= start && itemDate <= end;
-      });
-    }
-    if (searchQuery) {
-      result = result.filter(
-        (item) =>
-          item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.about.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.about.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.details.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.details.invitedBy
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-      );
-    }
-    if (statusFilter) {
-      result = result.filter((item) => item.about.status === statusFilter);
-    }
-    return result;
-  }, [originalData, dateRange, searchQuery, statusFilter]);
-
-  const sortedArr = useMemo(() => {
-    if (!sortConfig.key || !sortConfig.direction) return filteredData;
-    const sorted = [...filteredData].sort((a, b) => {
-      let aValue, bValue;
-      switch (sortConfig.key) {
-        case "name": {
-          aValue = a.about.name;
-          bValue = b.about.name;
-          break;
-        }
-        case "email": {
-          aValue = a.about.email;
-          bValue = b.about.email;
-          break;
-        }
-        case "date": {
-          const [ad, am, ay] = a.details.date.split(".");
-          const [bd, bm, by] = b.details.date.split(".");
-          aValue = new Date(ay, am - 1, ad);
-          bValue = new Date(by, bm - 1, bd);
-          break;
-        }
-        case "invitedBy": {
-          aValue = a.details.invitedBy;
-          bValue = b.details.invitedBy;
-          break;
-        }
-        case "status": {
-          aValue = a.about.status;
-          bValue = b.about.status;
-          break;
-        }
-        default:
-          return 0;
-      }
-      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [sortConfig, filteredData]);
 
   const changeSort = (key) => {
     setSortConfig((prev) => {
@@ -158,7 +87,6 @@ export default function RenderList() {
     return <FaSort style={{ marginLeft: 4 }} />;
   };
 
-  // Fix the `handleStatusChange` function to ensure it updates the `data` state correctly
   const handleStatusChange = (id, newStatus) => {
     setData((prevData) =>
       prevData.map((item) =>
@@ -186,26 +114,26 @@ export default function RenderList() {
     originalData,
     fetchRemaining = false
   ) => {
-    setLoading(true); // Show loader
-    if (!fetchRemaining) setData([]); // Wipe the visible list
+    setLoading(true);
+    if (!fetchRemaining) setData([]);
 
-    // Simulate a network delay and fetch data with filters and sorting
+    // Simulating a network delay
     const { data: initialRows, totalLength } = await fetchPageData(
       currentPage,
       5,
       fetchRemaining,
       { dateRange, searchQuery, statusFilter },
       sortConfig,
-      originalData // Pass the state to the service function
+      originalData // Pass the state to the service
     );
 
-    setData((prevRows) => {
-      // debugger;
-      return fetchRemaining ? [...prevRows, ...initialRows] : initialRows;
-    }); // Set the initial 5 rows for the current page
-    setTotalPages(Math.ceil(totalLength / 10)); // Calculate total pages assuming 10 rows per page
-    setLoading(false); // Hide loader
+    setData((prevRows) =>
+      fetchRemaining ? [...prevRows, ...initialRows] : initialRows
+    );
+    setTotalPages(Math.ceil(totalLength / 10));
+    setLoading(false);
   };
+
   useEffect(() => {
     fetchData(
       currentPage,
@@ -259,9 +187,6 @@ export default function RenderList() {
       }
     };
   }, [data]);
-
-  const startIndex = (currentPage - 1) * pageSize;
-  const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
 
   return (
     <Container>
