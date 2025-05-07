@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Pagination, Select, DatePicker, Input, Spin } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { DATA_OBJECT } from "../constants/constants";
@@ -150,6 +150,8 @@ export default function RenderList() {
     originalData,
   ]);
 
+  const memoizedDataArray = useMemo(() => data, [data.join(",")]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -184,7 +186,7 @@ export default function RenderList() {
         observer.unobserve(fifthRowRef.current);
       }
     };
-  }, [data]);
+  }, [memoizedDataArray]);
 
   return (
     <Container>
@@ -259,7 +261,10 @@ export default function RenderList() {
         <Tbody>
           {data &&
             data.map((item, index) => (
-              <Tr key={item.id} ref={index === 4 ? fifthRowRef : null}>
+              <Tr
+                key={item.id}
+                ref={index === data.length - 1 ? fifthRowRef : null}
+              >
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
                 <Td>{formatDate(item.details.date)}</Td>
