@@ -22,15 +22,15 @@ export default function RenderList() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [originalData, setOriginalData] = useState(DATA_OBJECT); // State to hold the original data
   const [data, setData] = useState(originalData.slice(0, 5)); // Store the imported array in local state
-  const [dateRange, setDateRange] = useState([null, null]); // State for date range
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
-  const [statusFilter, setStatusFilter] = useState(null); // State for status filter
-  const [totalPages, setTotalPages] = useState(0); // State for total pages
-  const [loading, setLoading] = useState(false); // Add a `loading` state to manage the loader visibility
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
   const pageSize = 10;
   const fifthRowRef = useRef(null);
   const [hasIntersected, setHasIntersected] = useState(false);
-  // Update the total counts dynamically based on `originalData`
+
   const totalUsers = originalData.length;
 
   const activeUsers = originalData.filter(
@@ -60,12 +60,11 @@ export default function RenderList() {
     setCurrentPage(1);
   };
 
-  // Update the `handleClearFilters` function to ensure status updates persist
   const handleClearFilters = () => {
     setDateRange([null, null]);
     setSearchQuery("");
     setStatusFilter(null);
-    setData(originalData.slice(0, 5)); // Reset the data to the originalData state to persist status updates
+    setData(originalData.slice(0, 5));
     setCurrentPage(1);
   };
 
@@ -104,7 +103,6 @@ export default function RenderList() {
     );
   };
 
-  // Update the `useEffect` to pass filters and sorting to `fetchPageData`
   const fetchData = async (
     currentPage,
     dateRange,
@@ -124,7 +122,7 @@ export default function RenderList() {
       fetchRemaining,
       { dateRange, searchQuery, statusFilter },
       sortConfig,
-      originalData // Pass the state to the service
+      originalData
     );
 
     setData((prevRows) =>
@@ -150,7 +148,7 @@ export default function RenderList() {
     statusFilter,
     sortConfig,
     originalData,
-  ]); // Ensure data is fetched with updated filters and sorting
+  ]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -174,7 +172,7 @@ export default function RenderList() {
           }
         });
       },
-      { threshold: 1.0 } // Trigger only when 100% of the row is visible
+      { threshold: 1.0 }
     );
 
     if (fifthRowRef.current) {
@@ -261,10 +259,7 @@ export default function RenderList() {
         <Tbody>
           {data &&
             data.map((item, index) => (
-              <Tr
-                key={item.id}
-                ref={index === 4 ? fifthRowRef : null} // Attach ref to the 5th row (index 4)
-              >
+              <Tr key={item.id} ref={index === 4 ? fifthRowRef : null}>
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
                 <Td>{formatDate(item.details.date)}</Td>
@@ -304,7 +299,7 @@ export default function RenderList() {
       <div className="pagination">
         <Pagination
           current={currentPage}
-          total={totalPages * pageSize} // Correctly calculate total items
+          total={totalPages * pageSize}
           pageSize={pageSize}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
