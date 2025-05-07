@@ -282,11 +282,12 @@ export default function RenderList() {
                 </Td>
               </Tr>
             ))}
-          {loading ? (
+
+          {loading || (data.length === 5 && currentPage !== totalPages) ? (
             <Tr
               style={{
                 verticalAlign: "center",
-                height: hasIntersected ? "10px" : "216px",
+                height: hasIntersected || data.length === 5 ? "10px" : "216px",
               }}
             >
               <Td colSpan="6" style={{ textAlign: "center" }}>
