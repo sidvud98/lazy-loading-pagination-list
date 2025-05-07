@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Pagination, Select, DatePicker, Input, Spin } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { DATA_OBJECT } from "../constants/constants";
@@ -28,7 +28,8 @@ export default function RenderList() {
   const [totalPages, setTotalPages] = useState(0); // State for total pages
   const [loading, setLoading] = useState(false); // Add a `loading` state to manage the loader visibility
   const pageSize = 10;
-
+  const fifthRowRef = useRef(null);
+  const [hasIntersected, setHasIntersected] = useState(false);
   // Update the total counts dynamically based on `originalData`
   const totalUsers = originalData.length;
 
@@ -176,26 +177,44 @@ export default function RenderList() {
   };
 
   // Update the `useEffect` to pass filters and sorting to `fetchPageData`
+  const fetchData = async (
+    currentPage,
+    dateRange,
+    searchQuery,
+    statusFilter,
+    sortConfig,
+    originalData,
+    fetchRemaining = false
+  ) => {
+    setLoading(true); // Show loader
+    if (!fetchRemaining) setData([]); // Wipe the visible list
+
+    // Simulate a network delay and fetch data with filters and sorting
+    const { data: initialRows, totalLength } = await fetchPageData(
+      currentPage,
+      5,
+      fetchRemaining,
+      { dateRange, searchQuery, statusFilter },
+      sortConfig,
+      originalData // Pass the state to the service function
+    );
+
+    setData((prevRows) => {
+      // debugger;
+      return fetchRemaining ? [...prevRows, ...initialRows] : initialRows;
+    }); // Set the initial 5 rows for the current page
+    setTotalPages(Math.ceil(totalLength / 10)); // Calculate total pages assuming 10 rows per page
+    setLoading(false); // Hide loader
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true); // Show loader
-      setData([]); // Wipe the visible list
-
-      // Simulate a network delay and fetch data with filters and sorting
-      const { data: initialRows, totalLength } = await fetchPageData(
-        currentPage,
-        5,
-        false,
-        { dateRange, searchQuery, statusFilter },
-        sortConfig,
-        originalData // Pass the state to the service function
-      );
-
-      setData(initialRows); // Set the initial 5 rows for the current page
-      setTotalPages(Math.ceil(totalLength / 10)); // Calculate total pages assuming 10 rows per page
-      setLoading(false); // Hide loader
-    };
-    fetchData();
+    fetchData(
+      currentPage,
+      dateRange,
+      searchQuery,
+      statusFilter,
+      sortConfig,
+      originalData
+    );
   }, [
     currentPage,
     dateRange,
@@ -204,6 +223,42 @@ export default function RenderList() {
     sortConfig,
     originalData,
   ]); // Ensure data is fetched with updated filters and sorting
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setHasIntersected(true);
+          } else {
+            setHasIntersected(false);
+          }
+          if (entry.isIntersecting && data.length <= 5) {
+            fetchData(
+              currentPage,
+              dateRange,
+              searchQuery,
+              statusFilter,
+              sortConfig,
+              originalData,
+              true
+            );
+          }
+        });
+      },
+      { threshold: 1.0 } // Trigger only when 100% of the row is visible
+    );
+
+    if (fifthRowRef.current) {
+      observer.observe(fifthRowRef.current);
+    }
+
+    return () => {
+      if (fifthRowRef.current) {
+        observer.unobserve(fifthRowRef.current);
+      }
+    };
+  }, [data]);
 
   const startIndex = (currentPage - 1) * pageSize;
   const currentItems = sortedArr.slice(startIndex, startIndex + pageSize);
@@ -279,15 +334,12 @@ export default function RenderList() {
           </Tr>
         </Thead>
         <Tbody>
-          {loading ? (
-            <Tr style={{ verticalAlign: "center", height: "216px" }}>
-              <Td colSpan="6" style={{ textAlign: "center" }}>
-                <Spin size="medium" />
-              </Td>
-            </Tr>
-          ) : (
-            data.map((item) => (
-              <Tr key={item.id}>
+          {data &&
+            data.map((item, index) => (
+              <Tr
+                key={item.id}
+                ref={index === 4 ? fifthRowRef : null} // Attach ref to the 5th row (index 4)
+              >
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
                 <Td>{formatDate(item.details.date)}</Td>
@@ -309,8 +361,19 @@ export default function RenderList() {
                   />
                 </Td>
               </Tr>
-            ))
-          )}
+            ))}
+          {loading ? (
+            <Tr
+              style={{
+                verticalAlign: "center",
+                height: hasIntersected ? "10px" : "216px",
+              }}
+            >
+              <Td colSpan="6" style={{ textAlign: "center" }}>
+                <Spin size="medium" />
+              </Td>
+            </Tr>
+          ) : null}
         </Tbody>
       </Table>
       <div className="pagination">
