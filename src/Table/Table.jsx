@@ -28,8 +28,9 @@ export default function RenderList() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const pageSize = 10;
-  const fifthRowRef = useRef(null);
+  const lastRowRef = useRef(null);
   const [hasIntersected, setHasIntersected] = useState(false);
+  const memoizedDataArray = useMemo(() => data, [data.join(",")]);
 
   const totalUsers = originalData.length;
 
@@ -65,6 +66,7 @@ export default function RenderList() {
     setSearchQuery("");
     setStatusFilter(null);
     setData(originalData.slice(0, 5));
+    setSortConfig({ key: null, direction: null });
     setCurrentPage(1);
   };
 
@@ -150,8 +152,6 @@ export default function RenderList() {
     originalData,
   ]);
 
-  const memoizedDataArray = useMemo(() => data, [data.join(",")]);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -177,13 +177,13 @@ export default function RenderList() {
       { threshold: 1.0 }
     );
 
-    if (fifthRowRef.current) {
-      observer.observe(fifthRowRef.current);
+    if (lastRowRef.current) {
+      observer.observe(lastRowRef.current);
     }
 
     return () => {
-      if (fifthRowRef.current) {
-        observer.unobserve(fifthRowRef.current);
+      if (lastRowRef.current) {
+        observer.unobserve(lastRowRef.current);
       }
     };
   }, [memoizedDataArray]);
@@ -263,7 +263,7 @@ export default function RenderList() {
             data.map((item, index) => (
               <Tr
                 key={item.id}
-                ref={index === data.length - 1 ? fifthRowRef : null}
+                ref={index === data.length - 1 ? lastRowRef : null}
               >
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
