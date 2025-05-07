@@ -73,7 +73,7 @@ export const Tbody = styled.tbody`
   width: 100%;
 
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 5px;
   }
 
   &::-webkit-scrollbar-thumb {
