@@ -22,6 +22,7 @@ export default function RenderList() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [originalData, setOriginalData] = useState(DATA_OBJECT); // State to hold the original data
   const [data, setData] = useState(originalData.slice(0, 5)); // Store the imported array in local state
+  const dataLengthRef = useRef(null);
   const [dateRange, setDateRange] = useState([null, null]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
@@ -66,6 +67,7 @@ export default function RenderList() {
     setSearchQuery("");
     setStatusFilter(null);
     setData(originalData.slice(0, 5));
+    dataLengthRef.current = 5;
     setSortConfig({ key: null, direction: null });
     setCurrentPage(1);
   };
@@ -115,7 +117,10 @@ export default function RenderList() {
     fetchRemaining = false
   ) => {
     setLoading(true);
-    if (!fetchRemaining) setData([]);
+    if (!fetchRemaining) {
+      setData([]);
+      dataLengthRef.current = 0;
+    }
 
     // Simulating a network delay
     const { data: initialRows, totalLength } = await fetchPageData(
@@ -127,9 +132,12 @@ export default function RenderList() {
       originalData
     );
 
-    setData((prevRows) =>
-      fetchRemaining ? [...prevRows, ...initialRows] : initialRows
-    );
+    setData((prevRows) => {
+      dataLengthRef.current = fetchRemaining
+        ? [...prevRows, ...initialRows].length
+        : initialRows.length;
+      return fetchRemaining ? [...prevRows, ...initialRows] : initialRows;
+    });
     setTotalPages(Math.ceil(totalLength / 10));
     setLoading(false);
   };
@@ -152,31 +160,32 @@ export default function RenderList() {
     originalData,
   ]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setHasIntersected(true);
-          } else {
-            setHasIntersected(false);
-          }
-          if (entry.isIntersecting && data.length <= 5) {
-            fetchData(
-              currentPage,
-              dateRange,
-              searchQuery,
-              statusFilter,
-              sortConfig,
-              originalData,
-              true
-            );
-          }
-        });
-      },
-      { threshold: 1.0 }
-    );
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setHasIntersected(true);
+        } else {
+          setHasIntersected(false);
+        }
+        if (entry.isIntersecting && dataLengthRef.current <= 5) {
+          debugger;
+          fetchData(
+            currentPage,
+            dateRange,
+            searchQuery,
+            statusFilter,
+            sortConfig,
+            originalData,
+            true
+          );
+        }
+      });
+    },
+    { threshold: 1.0 }
+  );
 
+  useEffect(() => {
     if (lastRowRef.current) {
       observer.observe(lastRowRef.current);
     }
