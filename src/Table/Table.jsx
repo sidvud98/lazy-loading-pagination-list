@@ -30,8 +30,8 @@ export default function RenderList() {
   const [loading, setLoading] = useState(false);
   const pageSize = 10;
   const lastRowRef = useRef(null);
+  const prevLastRowRef = useRef(null);
   const [hasIntersected, setHasIntersected] = useState(false);
-  const memoizedDataArray = useMemo(() => data, [data.join(",")]);
 
   const totalUsers = originalData.length;
 
@@ -160,42 +160,61 @@ export default function RenderList() {
     originalData,
   ]);
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setHasIntersected(true);
-        } else {
-          setHasIntersected(false);
-        }
-        if (entry.isIntersecting && dataLengthRef.current <= 5) {
-          debugger;
-          fetchData(
-            currentPage,
-            dateRange,
-            searchQuery,
-            statusFilter,
-            sortConfig,
-            originalData,
-            true
-          );
-        }
-      });
-    },
-    { threshold: 1.0 }
+  const observer = useMemo(
+    () =>
+      new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setHasIntersected(true);
+              console.log("last row intersected", dataLengthRef.current);
+            } else {
+              setHasIntersected(false);
+            }
+            if (entry.isIntersecting && dataLengthRef.current <= 10) {
+              fetchData(
+                currentPage,
+                dateRange,
+                searchQuery,
+                statusFilter,
+                sortConfig,
+                originalData,
+                true
+              );
+            }
+          });
+        },
+        { threshold: 1.0 }
+      ),
+    [
+      currentPage,
+      dateRange,
+      searchQuery,
+      statusFilter,
+      sortConfig,
+      originalData,
+    ]
   );
 
   useEffect(() => {
+    // Clean up previous observer
+    if (prevLastRowRef.current) {
+      observer.unobserve(prevLastRowRef.current);
+    }
+
     if (lastRowRef.current) {
+      // Store current last row for cleanup in next update
+      prevLastRowRef.current = lastRowRef.current;
+      // Observe new last row
       observer.observe(lastRowRef.current);
     }
 
     return () => {
-      if (lastRowRef.current) {
-        observer.unobserve(lastRowRef.current);
+      if (prevLastRowRef.current) {
+        observer.unobserve(prevLastRowRef.current);
       }
     };
-  }, [memoizedDataArray]);
+  }, [data, observer]);
 
   return (
     <Container>
