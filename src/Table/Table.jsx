@@ -122,17 +122,6 @@ export default function RenderList() {
     fetchRemaining = false,
     batchNumber
   ) => {
-    console.log({
-      currentPage,
-      dateRange,
-      searchQuery,
-      statusFilter,
-      sortConfig,
-      originalData,
-      fetchRemaining,
-      batchNumber,
-    });
-
     setLoading(true);
     if (!fetchRemaining) {
       setData([]);
@@ -168,10 +157,6 @@ export default function RenderList() {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               setHasIntersected(true);
-              console.log(
-                "last row intersected",
-                currentPageDataLengthRef.current
-              );
             } else {
               setHasIntersected(false);
             }
@@ -219,7 +204,6 @@ export default function RenderList() {
     if (prevLastRowRef.current) {
       observer.unobserve(prevLastRowRef.current);
     }
-    console.log("observer", observer.entries);
     if (lastRowRef.current) {
       // Store current last row for cleanup in next update
       prevLastRowRef.current = lastRowRef.current;
@@ -232,16 +216,7 @@ export default function RenderList() {
         observer.unobserve(prevLastRowRef.current);
       }
     };
-  }, [
-    data,
-    observer,
-    currentPage,
-    dateRange,
-    searchQuery,
-    statusFilter,
-    sortConfig,
-    originalData,
-  ]);
+  }, [data]);
 
   useEffect(() => {
     additionalBatchNumber.current = 0;
@@ -340,7 +315,11 @@ export default function RenderList() {
                 key={item.id}
                 ref={index === data.length - 1 ? lastRowRef : null}
               >
-                <Td>{index + 1}</Td>
+                <Td>
+                  {index +
+                    1 +
+                    TOTAL_NUMBER_OF_ROWS_IN_A_PAGE * (currentPage - 1)}
+                </Td>
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
                 <Td>{formatDate(item.details.date)}</Td>
@@ -375,7 +354,7 @@ export default function RenderList() {
                     : "216px",
               }}
             >
-              <Td colSpan="6" style={{ textAlign: "center" }}>
+              <Td colSpan="7" style={{ textAlign: "center" }}>
                 <Spin size="medium" />
               </Td>
             </Tr>
