@@ -32,7 +32,7 @@ export default function RenderList() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasIntersected, setHasIntersected] = useState(false);
-  const dataLengthRef = useRef(null);
+  const currentPageDataLengthRef = useRef(null);
   const lastRowRef = useRef(null);
   const prevLastRowRef = useRef(null);
   const additionalBatchNumber = useRef(0);
@@ -71,7 +71,7 @@ export default function RenderList() {
     setSearchQuery("");
     setStatusFilter(null);
     setData(originalData.slice(0, BATCH_SIZE));
-    dataLengthRef.current = BATCH_SIZE;
+    currentPageDataLengthRef.current = BATCH_SIZE;
     setSortConfig({ key: null, direction: null });
     setCurrentPage(1);
   };
@@ -124,7 +124,7 @@ export default function RenderList() {
     setLoading(true);
     if (!fetchRemaining) {
       setData([]);
-      dataLengthRef.current = 0;
+      currentPageDataLengthRef.current = 0;
     }
 
     // Simulating a network delay
@@ -139,7 +139,7 @@ export default function RenderList() {
     );
 
     setData((prevRows) => {
-      dataLengthRef.current = fetchRemaining
+      currentPageDataLengthRef.current = fetchRemaining
         ? [...prevRows, ...initialRows].length
         : initialRows.length;
       return fetchRemaining ? [...prevRows, ...initialRows] : initialRows;
@@ -174,13 +174,16 @@ export default function RenderList() {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               setHasIntersected(true);
-              console.log("last row intersected", dataLengthRef.current);
+              console.log(
+                "last row intersected",
+                currentPageDataLengthRef.current
+              );
             } else {
               setHasIntersected(false);
             }
             if (
               entry.isIntersecting &&
-              dataLengthRef.current <=
+              currentPageDataLengthRef.current <=
                 TOTAL_NUMBER_OF_ROWS_IN_A_PAGE - BATCH_SIZE
             ) {
               additionalBatchNumber.current += 1;
