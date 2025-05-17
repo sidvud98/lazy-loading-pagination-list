@@ -1128,3 +1128,9 @@ export const DATA_OBJECT = [
     },
   },
 ];
+
+export const TOTAL_NUMBER_OF_ROWS_IN_A_PAGE = 21;
+
+export const SIMULATED_NETWORK_DELAY = 1000;
+
+export const BATCH_SIZE = 7;

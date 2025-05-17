@@ -4,21 +4,27 @@ import {
   filterByStatus,
   sortData,
 } from "../utils/helpers";
+import {
+  SIMULATED_NETWORK_DELAY,
+  TOTAL_NUMBER_OF_ROWS_IN_A_PAGE,
+} from "../constants/constants";
 
 export const fetchPageData = (
-  pageNumber,
-  pageSize = 5,
+  pageNumber = 1,
+  batchSize = 5,
   fetchRemaining = false,
   filters = {},
   sortConfig = null,
-  dataSource = []
+  dataSource = [],
+  batchNumber = 1
 ) => {
-  const startIndex = fetchRemaining ? pageSize : 0;
-  const endIndex = startIndex + fetchRemaining ? 2 * pageSize : pageSize;
+  const startIndex = fetchRemaining ? batchNumber * batchSize : 0;
+  const endIndex =
+    startIndex + fetchRemaining ? (batchNumber + 1) * batchSize : batchSize;
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  return delay(1000).then(() => {
+  return delay(SIMULATED_NETWORK_DELAY).then(() => {
     let filteredData = dataSource;
 
     if (filters.dateRange?.[0] && filters.dateRange?.[1]) {
@@ -37,8 +43,8 @@ export const fetchPageData = (
 
     return {
       data: filteredData.slice(
-        (pageNumber - 1) * (pageSize * 2) + startIndex,
-        (pageNumber - 1) * (pageSize * 2) + endIndex
+        (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + startIndex,
+        (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + endIndex
       ),
       totalLength: filteredData.length,
     };

@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Pagination, Select, DatePicker, Input, Spin } from "antd";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
-import { DATA_OBJECT } from "../constants/constants";
+import {
+  DATA_OBJECT,
+  TOTAL_NUMBER_OF_ROWS_IN_A_PAGE,
+  BATCH_SIZE,
+} from "../constants/constants";
 import { fetchPageData } from "../services/api";
 import {
   Container,
@@ -21,17 +25,17 @@ export default function RenderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [originalData, setOriginalData] = useState(DATA_OBJECT); // State to hold the original data
-  const [data, setData] = useState(originalData.slice(0, 5)); // Store the imported array in local state
-  const dataLengthRef = useRef(null);
+  const [data, setData] = useState(originalData.slice(0, BATCH_SIZE)); // Store the imported array in local state
   const [dateRange, setDateRange] = useState([null, null]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const pageSize = 10;
+  const [hasIntersected, setHasIntersected] = useState(false);
+  const dataLengthRef = useRef(null);
   const lastRowRef = useRef(null);
   const prevLastRowRef = useRef(null);
-  const [hasIntersected, setHasIntersected] = useState(false);
+  const additionalBatchNumber = useRef(0);
 
   const totalUsers = originalData.length;
 
@@ -66,8 +70,8 @@ export default function RenderList() {
     setDateRange([null, null]);
     setSearchQuery("");
     setStatusFilter(null);
-    setData(originalData.slice(0, 5));
-    dataLengthRef.current = 5;
+    setData(originalData.slice(0, BATCH_SIZE));
+    dataLengthRef.current = BATCH_SIZE;
     setSortConfig({ key: null, direction: null });
     setCurrentPage(1);
   };
@@ -114,7 +118,8 @@ export default function RenderList() {
     statusFilter,
     sortConfig,
     originalData,
-    fetchRemaining = false
+    fetchRemaining = false,
+    batchNumber
   ) => {
     setLoading(true);
     if (!fetchRemaining) {
@@ -125,11 +130,12 @@ export default function RenderList() {
     // Simulating a network delay
     const { data: initialRows, totalLength } = await fetchPageData(
       currentPage,
-      5,
+      BATCH_SIZE,
       fetchRemaining,
       { dateRange, searchQuery, statusFilter },
       sortConfig,
-      originalData
+      originalData,
+      batchNumber
     );
 
     setData((prevRows) => {
@@ -138,7 +144,7 @@ export default function RenderList() {
         : initialRows.length;
       return fetchRemaining ? [...prevRows, ...initialRows] : initialRows;
     });
-    setTotalPages(Math.ceil(totalLength / 10));
+    setTotalPages(Math.ceil(totalLength / TOTAL_NUMBER_OF_ROWS_IN_A_PAGE));
     setLoading(false);
   };
 
@@ -151,6 +157,7 @@ export default function RenderList() {
       sortConfig,
       originalData
     );
+    additionalBatchNumber.current = 0;
   }, [
     currentPage,
     dateRange,
@@ -171,7 +178,12 @@ export default function RenderList() {
             } else {
               setHasIntersected(false);
             }
-            if (entry.isIntersecting && dataLengthRef.current <= 10) {
+            if (
+              entry.isIntersecting &&
+              dataLengthRef.current <=
+                TOTAL_NUMBER_OF_ROWS_IN_A_PAGE - BATCH_SIZE
+            ) {
+              additionalBatchNumber.current += 1;
               fetchData(
                 currentPage,
                 dateRange,
@@ -179,7 +191,8 @@ export default function RenderList() {
                 statusFilter,
                 sortConfig,
                 originalData,
-                true
+                true,
+                additionalBatchNumber.current
               );
             }
           });
@@ -268,6 +281,7 @@ export default function RenderList() {
       <Table>
         <Thead>
           <Tr>
+            <Th>S. No</Th>
             <Th onClick={() => changeSort("name")}>
               Name{renderSortIcon("name")}
             </Th>
@@ -293,6 +307,7 @@ export default function RenderList() {
                 key={item.id}
                 ref={index === data.length - 1 ? lastRowRef : null}
               >
+                <Td>{index + 1}</Td>
                 <Td>{item.about.name}</Td>
                 <Td>{item.about.email}</Td>
                 <Td>{formatDate(item.details.date)}</Td>
@@ -316,11 +331,15 @@ export default function RenderList() {
               </Tr>
             ))}
 
-          {loading || (data.length === 5 && currentPage !== totalPages) ? (
+          {loading ||
+          (data.length === BATCH_SIZE && currentPage !== totalPages) ? (
             <Tr
               style={{
                 verticalAlign: "center",
-                height: hasIntersected || data.length === 5 ? "10px" : "216px",
+                height:
+                  hasIntersected || data.length === BATCH_SIZE
+                    ? "10px"
+                    : "216px",
               }}
             >
               <Td colSpan="6" style={{ textAlign: "center" }}>
@@ -333,8 +352,8 @@ export default function RenderList() {
       <div className="pagination">
         <Pagination
           current={currentPage}
-          total={totalPages * pageSize}
-          pageSize={pageSize}
+          total={totalPages * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE}
+          pageSize={TOTAL_NUMBER_OF_ROWS_IN_A_PAGE}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
         />
