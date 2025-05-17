@@ -3,7 +3,7 @@ export const DATA_OBJECT = [
     id: "999",
     about: {
       name: "Aashiq",
-      status: "ACTIVE",
+      status: "BLOCKED",
       email: "Aashiq.d9@demo.com",
     },
     details: {
@@ -27,7 +27,7 @@ export const DATA_OBJECT = [
     id: "9",
     about: {
       name: "Demo Demo 9",
-      status: "ACTIVE",
+      status: "INVITED",
       email: "demo.d9@demo.com",
     },
     details: {

@@ -241,19 +241,39 @@ export default function RenderList() {
     <Container>
       <Title>User Invitations</Title>
       <div className="sub-container">
-        <div className="box">
+        <div
+          className="box"
+          onClick={() => {
+            handleStatusFilterChange(null);
+          }}
+        >
           <strong>Total Users</strong>
           <div>{totalUsers}</div>
         </div>
-        <div className="box">
+        <div
+          className="box"
+          onClick={() => {
+            handleStatusFilterChange("ACTIVE");
+          }}
+        >
           <strong>Active</strong>
           <div>{activeUsers}</div>
         </div>
-        <div className="box">
+        <div
+          className="box"
+          onClick={() => {
+            handleStatusFilterChange("INVITED");
+          }}
+        >
           <strong>Invited</strong>
           <div>{invitedUsers}</div>
         </div>
-        <div className="box">
+        <div
+          className="box"
+          onClick={() => {
+            handleStatusFilterChange("BLOCKED");
+          }}
+        >
           <strong>Blocked</strong>
           <div>{blockedUsers}</div>
         </div>
