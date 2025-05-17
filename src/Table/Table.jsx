@@ -36,6 +36,7 @@ export default function RenderList() {
   const lastRowRef = useRef(null);
   const prevLastRowRef = useRef(null);
   const additionalBatchNumber = useRef(0);
+  const totalLengthRef = useRef(0);
 
   const totalUsers = originalData.length;
 
@@ -121,6 +122,17 @@ export default function RenderList() {
     fetchRemaining = false,
     batchNumber
   ) => {
+    console.log({
+      currentPage,
+      dateRange,
+      searchQuery,
+      statusFilter,
+      sortConfig,
+      originalData,
+      fetchRemaining,
+      batchNumber,
+    });
+
     setLoading(true);
     if (!fetchRemaining) {
       setData([]);
@@ -145,27 +157,9 @@ export default function RenderList() {
       return fetchRemaining ? [...prevRows, ...initialRows] : initialRows;
     });
     setTotalPages(Math.ceil(totalLength / TOTAL_NUMBER_OF_ROWS_IN_A_PAGE));
+    totalLengthRef.current = totalLength;
     setLoading(false);
   };
-
-  useEffect(() => {
-    fetchData(
-      currentPage,
-      dateRange,
-      searchQuery,
-      statusFilter,
-      sortConfig,
-      originalData
-    );
-    additionalBatchNumber.current = 0;
-  }, [
-    currentPage,
-    dateRange,
-    searchQuery,
-    statusFilter,
-    sortConfig,
-    originalData,
-  ]);
 
   const observer = useMemo(
     () =>
@@ -181,10 +175,18 @@ export default function RenderList() {
             } else {
               setHasIntersected(false);
             }
+            const nonLastPageRemainingFlag =
+              currentPage !== totalPages &&
+              currentPageDataLengthRef.current <=
+                TOTAL_NUMBER_OF_ROWS_IN_A_PAGE - BATCH_SIZE;
+
+            const lastPageRemainingFlag =
+              currentPage === totalPages &&
+              currentPageDataLengthRef.current <=
+                totalLengthRef % TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
             if (
               entry.isIntersecting &&
-              currentPageDataLengthRef.current <=
-                TOTAL_NUMBER_OF_ROWS_IN_A_PAGE - BATCH_SIZE
+              (nonLastPageRemainingFlag || lastPageRemainingFlag)
             ) {
               additionalBatchNumber.current += 1;
               fetchData(
@@ -217,7 +219,7 @@ export default function RenderList() {
     if (prevLastRowRef.current) {
       observer.unobserve(prevLastRowRef.current);
     }
-
+    console.log("observer", observer.entries);
     if (lastRowRef.current) {
       // Store current last row for cleanup in next update
       prevLastRowRef.current = lastRowRef.current;
@@ -230,7 +232,35 @@ export default function RenderList() {
         observer.unobserve(prevLastRowRef.current);
       }
     };
-  }, [data, observer]);
+  }, [
+    data,
+    observer,
+    currentPage,
+    dateRange,
+    searchQuery,
+    statusFilter,
+    sortConfig,
+    originalData,
+  ]);
+
+  useEffect(() => {
+    additionalBatchNumber.current = 0;
+    fetchData(
+      currentPage,
+      dateRange,
+      searchQuery,
+      statusFilter,
+      sortConfig,
+      originalData
+    );
+  }, [
+    currentPage,
+    dateRange,
+    searchQuery,
+    statusFilter,
+    sortConfig,
+    originalData,
+  ]);
 
   return (
     <Container>
