@@ -18,15 +18,12 @@ export const fetchPageData = (
   dataSource = [],
   batchNumber = 1
 ) => {
-  const startIndex = fetchRemaining ? batchNumber * batchSize : 0;
-  const endIndex =
-    startIndex + fetchRemaining ? (batchNumber + 1) * batchSize : batchSize;
-
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   return delay(SIMULATED_NETWORK_DELAY).then(() => {
     let filteredData = dataSource;
 
+    // Apply filters first
     if (filters.dateRange?.[0] && filters.dateRange?.[1]) {
       filteredData = filterByDateRange(filteredData, filters.dateRange);
     }
@@ -37,14 +34,20 @@ export const fetchPageData = (
       filteredData = filterByStatus(filteredData, filters.statusFilter);
     }
 
+    // Apply sorting
     if (sortConfig?.key && sortConfig?.direction) {
       filteredData = sortData(filteredData, sortConfig);
     }
 
-    const responseData = filteredData.slice(
-      (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + startIndex,
-      (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + endIndex
-    );
+    // Calculate pagination indexes
+    const pageStartIndex = (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
+    const batchStartIndex = fetchRemaining ? (batchNumber - 1) * batchSize : 0;
+    const startIndex = pageStartIndex + batchStartIndex;
+    const endIndex = startIndex + batchSize;
+
+    // Get the data for current batch
+    const responseData = filteredData.slice(startIndex, endIndex);
+
     return {
       data: responseData,
       totalLength: filteredData.length,

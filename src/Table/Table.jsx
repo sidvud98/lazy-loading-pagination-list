@@ -160,19 +160,17 @@ export default function RenderList() {
             } else {
               setHasIntersected(false);
             }
-            const nonLastPageRemainingFlag =
-              currentPage !== totalPages &&
-              currentPageDataLengthRef.current <=
-                TOTAL_NUMBER_OF_ROWS_IN_A_PAGE - BATCH_SIZE;
 
-            const lastPageRemainingFlag =
-              currentPage === totalPages &&
-              currentPageDataLengthRef.current <
-                totalLengthRef.current % TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
+            // Check if we have loaded all data for the current page
+            const currentPageTotal =
+              currentPage === totalPages
+                ? totalLengthRef.current % TOTAL_NUMBER_OF_ROWS_IN_A_PAGE ||
+                  TOTAL_NUMBER_OF_ROWS_IN_A_PAGE
+                : TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
 
             if (
               entry.isIntersecting &&
-              (nonLastPageRemainingFlag || lastPageRemainingFlag)
+              currentPageDataLengthRef.current < currentPageTotal
             ) {
               additionalBatchNumber.current += 1;
               fetchData(
@@ -223,6 +221,7 @@ export default function RenderList() {
 
   useEffect(() => {
     additionalBatchNumber.current = 0;
+    console.log("second useEffect");
     fetchData(
       currentPage,
       dateRange,
@@ -244,12 +243,7 @@ export default function RenderList() {
     <Container>
       <Title>User Invitations</Title>
       <div className="sub-container">
-        <div
-          className="box"
-          onClick={() => {
-            handleStatusFilterChange(null);
-          }}
-        >
+        <div className="box" onClick={handleClearFilters}>
           <strong>Total Users</strong>
           <div>{totalUsers}</div>
         </div>
