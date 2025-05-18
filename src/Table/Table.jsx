@@ -167,7 +167,7 @@ export default function RenderList() {
 
             const lastPageRemainingFlag =
               currentPage === totalPages &&
-              currentPageDataLengthRef.current <=
+              currentPageDataLengthRef.current <
                 totalLengthRef.current % TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
 
             if (
