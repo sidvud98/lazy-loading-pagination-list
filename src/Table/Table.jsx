@@ -168,7 +168,8 @@ export default function RenderList() {
             const lastPageRemainingFlag =
               currentPage === totalPages &&
               currentPageDataLengthRef.current <=
-                totalLengthRef % TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
+                totalLengthRef.current % TOTAL_NUMBER_OF_ROWS_IN_A_PAGE;
+
             if (
               entry.isIntersecting &&
               (nonLastPageRemainingFlag || lastPageRemainingFlag)
@@ -189,6 +190,7 @@ export default function RenderList() {
         },
         { threshold: 1.0 }
       ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       currentPage,
       dateRange,
@@ -216,6 +218,7 @@ export default function RenderList() {
         observer.unobserve(prevLastRowRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   useEffect(() => {
@@ -313,7 +316,7 @@ export default function RenderList() {
             <Th onClick={() => changeSort("name")}>
               Name{renderSortIcon("name")}
             </Th>
-            <Th onClick={() => changeSort("email")}>
+            <Th onClick={() => changeSort("email")} style={{ width: "250px" }}>
               Email{renderSortIcon("email")}
             </Th>
             <Th onClick={() => changeSort("date")}>
@@ -341,7 +344,7 @@ export default function RenderList() {
                     TOTAL_NUMBER_OF_ROWS_IN_A_PAGE * (currentPage - 1)}
                 </Td>
                 <Td>{item.about.name}</Td>
-                <Td>{item.about.email}</Td>
+                <Td style={{ width: "250px" }}>{item.about.email}</Td>
                 <Td>{formatDate(item.details.date)}</Td>
                 <Td>{item.details.invitedBy}</Td>
                 <Td>
@@ -363,8 +366,7 @@ export default function RenderList() {
               </Tr>
             ))}
 
-          {loading ||
-          (data.length === BATCH_SIZE && currentPage !== totalPages) ? (
+          {loading ? (
             <Tr
               style={{
                 verticalAlign: "center",

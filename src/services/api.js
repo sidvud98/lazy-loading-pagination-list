@@ -41,11 +41,12 @@ export const fetchPageData = (
       filteredData = sortData(filteredData, sortConfig);
     }
 
+    const responseData = filteredData.slice(
+      (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + startIndex,
+      (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + endIndex
+    );
     return {
-      data: filteredData.slice(
-        (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + startIndex,
-        (pageNumber - 1) * TOTAL_NUMBER_OF_ROWS_IN_A_PAGE + endIndex
-      ),
+      data: responseData,
       totalLength: filteredData.length,
     };
   });
